@@ -7,6 +7,7 @@ import struct
 import sys
 import binascii
 import time
+from construct import *
 
 dev = None
 
