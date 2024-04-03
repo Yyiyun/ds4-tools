@@ -19,12 +19,12 @@ VALID_DEVICE_IDS = [
 def wait_for_device():
     global dev
 
-    print("Waiting for a DualSense...")
+    print("等待检测到 DualSense 手柄...")
     while True:
         for i in VALID_DEVICE_IDS:
             dev = usb.core.find(idVendor=i[0], idProduct=i[1])
             if dev is not None:
-                print("Found a DualSense: vendorId=%04x productId=%04x" % (i[0], i[1]))
+                print("检测到 DualSense 手柄: 供应商ID=%04x 产品ID=%04x" % (i[0], i[1]))
                 return
         time.sleep(1)
 
@@ -37,33 +37,33 @@ class HID_REQ:
     SET_REPORT = 0x09
 
 def hid_get_report(dev, report_id, size):
-    assert isinstance(size, int), 'get_report size must be integer'
-    assert report_id <= 0xff, 'only support report_type == 0'
+    assert isinstance(size, int), 'get_report 的大小必须是整数'
+    assert report_id <= 0xff, '仅支持 report_type == 0'
     return dev.ctrl_transfer(HID_REQ.DEV_TO_HOST, HID_REQ.GET_REPORT, report_id, 0, size + 1)[1:].tobytes()
 
 
 def hid_set_report(dev, report_id, buf):
     assert isinstance(buf, (bytes, array.array)
-                      ), 'set_report buf must be buffer'
-    assert report_id <= 0xff, 'only support report_type == 0'
+                      ), 'set_report 的 buf 必须是缓冲区'
+    assert report_id <= 0xff, '仅支持 report_type == 0'
     buf = struct.pack('B', report_id) + buf
     return dev.ctrl_transfer(HID_REQ.HOST_TO_DEV, HID_REQ.SET_REPORT, (3 << 8) | report_id, 0, buf)
 
 def do_stick_center_calibration():
-    print("Starting analog center calibration...")
+    print("开始进行摇杆中心校准...")
 
     deviceId = 1
     targetId = 1
 
     hid_set_report(dev, 0x82, struct.pack('BBB', 1, deviceId, targetId))
 
-    k = hid_get_report(dev, 0x83, 4)  # Define and initialize k variable
+    k = hid_get_report(dev, 0x83, 4)
     if k != bytes([deviceId,targetId,1,0xff]):
-        print("ERROR: DualSense is in invalid state: %s. Try to reset it" % (binascii.hexlify(k)))
+        print("错误: DualSense 处于无效状态: %s. 请尝试重置" % (binascii.hexlify(k)))
         return
 
     while True:
-        print("Press S to sample data or W to store calibration (followed by enter)")
+        print("按 S 键采样数据或按 W 键保存校准数据（后跟回车）")
         X = input("> ").upper()
         if X == "S":
             hid_set_report(dev, 0x82, struct.pack('BBB', 3, deviceId, targetId))
@@ -72,12 +72,12 @@ def do_stick_center_calibration():
             hid_set_report(dev, 0x82, struct.pack('BBB', 2, deviceId, targetId))
             break
         else:
-            print("Invalid command")
+            print("无效命令")
 
-    print("Stick calibration done!!")
+    print("摇杆校准完成!!")
 
 def do_stick_minmax_calibration():
-    print("Starting analog min-max calibration...")
+    print("开始进行模拟摇杆最小最大值校准...")
 
     deviceId = 1
     targetId = 2
@@ -85,37 +85,37 @@ def do_stick_minmax_calibration():
     hid_set_report(dev, 0x82, struct.pack('BBB', 1, deviceId, targetId))
     k = hid_get_report(dev, 0x83, 4)
     if k != bytes([deviceId,targetId,1,0xff]):
-        print("ERROR: DualSense is in invalid state: %s. Try to reset it" % (binascii.hexlify(k)))
+        print("错误: DualSense 处于无效状态: %s. 请尝试重置" % (binascii.hexlify(k)))
         return
 
-    print("DualSense is now sampling data. Move the analogs all around their range")
-    print("When done, press any key to store calibration.")
+    print("DualSense 现在正在采样数据。 将摇杆在其范围内移动")
+    print("完成后，按任意键保存校准数据.")
 
     input()
 
     hid_set_report(dev, 0x82, struct.pack('BBB', 2, deviceId, targetId))
 
-    print("Stick calibration done!!")
+    print("摇杆校准完成!!")
 
 if __name__ == "__main__":
     print("*********************************************************")
-    print("* Welcome to the fantastic DualSense Calibration Tool   *")
+    print("* 欢迎使用 DualSense 手柄校准工具                     *")
     print("*                                                       *")
-    print("* This tool may break your controller.                  *")
-    print("* Use at your own risk. Good luck! <3                   *")
+    print("* 此工具可能会损坏您的手柄。                            *")
+    print("* 请自行承担风险。祝好运！ <3                           *")
     print("*                                                       *")
-    print("* Version 0.01 (C) 2024                   ~ by the_al ~ *")
+    print("* 版本 0.01 (C) 2024                      ~ by the_al ~ *")
     print("*********************************************************")
 
     parser = argparse.ArgumentParser(prog='ds5-calibration-tool')
 
-    parser.add_argument('-p', '--permanent', help="make changes permanent", action='store_true')
+    parser.add_argument('-p', '--permanent', help="使更改永久生效", action='store_true')
     subparsers = parser.add_subparsers(dest="action")
 
-    p = subparsers.add_parser('analog-center', help="calibrate the center the analog sticks")
+    p = subparsers.add_parser('analog-center', help="校准模拟摇杆中心")
     p.set_defaults(func=do_stick_center_calibration)
 
-    p = subparsers.add_parser('analog-range', help="calibrate the range of analog sticks")
+    p = subparsers.add_parser('analog-range', help="校准模拟摇杆范围")
     p.set_defaults(func=do_stick_minmax_calibration)
 
     args = parser.parse_args()
@@ -125,21 +125,21 @@ if __name__ == "__main__":
 
     wait_for_device()
 
-    # Detach kernel driver
+    # 分离内核驱动程序
     if sys.platform != 'win32' and dev.is_kernel_driver_active(0):
         try:
             dev.detach_kernel_driver(0)
         except usb.core.USBError as e:
-            sys.exit('Could not detatch kernel driver: %s' % str(e))
+            sys.exit('无法分离内核驱动程序: %s' % str(e))
 
     if dev == None:
-        print("Cannot find a DualSense")
+        print("找不到 DualSense 手柄")
         exit(-1)
 
-    print("== DualSense online! ==")
+    print("== DualSense 已连接! ==")
 
     if args.permanent:
-        print("Unlocking NVS")
+        print("正在解锁 NVS")
         hid_set_report(dev, 0x80, struct.pack('BBBBBB', 3, 2, 101, 50, 64, 12))
 
     try:
@@ -148,5 +148,5 @@ if __name__ == "__main__":
         print(e)
 
     if args.permanent:
-        print("Re-locking NVS")
+        print("正在重新锁定 NVS")
         hid_set_report(dev, 0x80, struct.pack('BB', 3, 1))
