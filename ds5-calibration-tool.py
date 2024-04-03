@@ -57,6 +57,7 @@ def do_stick_center_calibration():
 
     hid_set_report(dev, 0x82, struct.pack('BBB', 1, deviceId, targetId))
 
+    k = hid_get_report(dev, 0x83, 4)  # Initialize k variable
     if k != bytes([deviceId,targetId,1,0xff]):
         print("ERROR: DualSense is in invalid state: %s. Try to reset it" % (binascii.hexlify(k)))
         return
@@ -129,7 +130,7 @@ if __name__ == "__main__":
         try:
             dev.detach_kernel_driver(0)
         except usb.core.USBError as e:
-            sys.exit('Could not detatch kernel driver: %s' % str(e))
+            sys.exit('Could not detach kernel driver: %s' % str(e))
 
     if dev == None:
         print("Cannot find a DualSense")
