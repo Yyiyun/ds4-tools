@@ -57,7 +57,7 @@ def do_stick_center_calibration():
 
     hid_set_report(dev, 0x82, struct.pack('BBB', 1, deviceId, targetId))
 
-    k = hid_get_report(dev, 0x83, 4)  # Initialize k variable
+    k = hid_get_report(dev, 0x83, 4)  # Define and initialize k variable
     if k != bytes([deviceId,targetId,1,0xff]):
         print("ERROR: DualSense is in invalid state: %s. Try to reset it" % (binascii.hexlify(k)))
         return
